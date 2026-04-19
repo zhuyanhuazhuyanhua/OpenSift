@@ -52,17 +52,24 @@ func main() {
 				}
 				cnt++
 				// end sleep trick
+				collectSuccess := true
 				func() {
 					defer func() {
 						if r := recover(); r != nil {
 							logger.Errorf("Task %s panic: %v", t, r)
+							collectSuccess = false
 						}
 					}()
 
 					task.Collect(t, *flagDisableCollect)
 				}()
 
-				schedule.FinishTask(t)
+				if collectSuccess {
+					schedule.FinishTask(t)
+				} else {
+					logger.Warnf("Task %s was not finished due to error/panic. It may be retried later.", t)
+					time.Sleep(10 * time.Second)
+				}
 
 			}
 		}()
