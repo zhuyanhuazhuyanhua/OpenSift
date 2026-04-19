@@ -39,7 +39,9 @@ func main() {
 			for {
 				t, err := schedule.GetTask()
 				if err != nil {
-					logger.Fatalf("Failed to get task: %s", err)
+					logger.Errorf("Failed to get task: %s", err)
+					time.Sleep(5 * time.Second)
+					continue
 				}
 
 				// // begin sleep trick
@@ -50,7 +52,15 @@ func main() {
 				}
 				cnt++
 				// end sleep trick
-				task.Collect(t, *flagDisableCollect)
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							logger.Errorf("Task %s panic: %v", t, r)
+						}
+					}()
+
+					task.Collect(t, *flagDisableCollect)
+				}()
 
 				schedule.FinishTask(t)
 
