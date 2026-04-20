@@ -43,6 +43,7 @@ require (
 require github.com/creack/pty v1.1.24
 
 require (
+	bou.ke/monkey v1.0.2 // indirect
 	github.com/frankban/quicktest v1.14.6 // indirect
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
