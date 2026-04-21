@@ -23,8 +23,11 @@ import (
 // @Router /admin/session/github/clientid [get]
 func getClientID(ctx *gin.Context) {
 	githubClientID, _ := config.GetWebGitHubOAuth()
+	state := generateState()
+	ctx.SetCookie("oauth_state", state, 300, "/", "", false, true)
 	ctx.JSON(http.StatusOK, model.GitHubClientIDResp{
 		ClientID: githubClientID,
+		State:    state,
 	})
 }
 
@@ -39,6 +42,21 @@ func getClientID(ctx *gin.Context) {
 // @Router /admin/session/github/callback [get]
 func githubCallback(ctx *gin.Context) {
 	code := ctx.Query("code")
+	state := ctx.Query("state")
+	savedState, err := ctx.Cookie("oauth_state")
+
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing state cookie"})
+		return
+	}
+
+	if state != savedState {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid state parameter"})
+		return
+	}
+
+	ctx.SetCookie("oauth_state", "", -1, "/", "", false, true)
+
 	if code == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No code provided"})
 		return
@@ -153,8 +171,7 @@ func getUserPolicy(username string) ([]string, bool) {
 }
 
 func generateJWT(username string, policy []string) (string, error) {
-	_, githubClientSecret := config.GetWebGitHubOAuth()
-	jwtSecret := []byte(githubClientSecret)
+	jwtSecret := []byte(config.GetJWTSecret())
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": username,
 		"policy":   policy,

@@ -2,6 +2,7 @@ package model
 
 type GitHubClientIDResp struct {
 	ClientID string `json:"clientId"`
+	State    string `json:"state"`
 }
 
 type GitHubCallbackResp struct {

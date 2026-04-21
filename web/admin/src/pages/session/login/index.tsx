@@ -24,8 +24,11 @@ export default function Login() {
     loading,
   } = useRequest(async () => {
     let clientid: string | undefined = "";
+    let state: string | undefined = "";
     try {
-      clientid = (await getAdminSessionGithubClientid()).clientId;
+      const res = await getAdminSessionGithubClientid();
+      clientid = res.clientId;
+      state = res.state;
     } catch (e) {
       console.error(e);
       return;
@@ -35,7 +38,7 @@ export default function Login() {
       return;
     }
     const redirectURL = `${window.location.origin}${baseURL}/session/gh_callback?ret_uri=${encodeURIComponent(retUri)}`;
-    const githubURL = `https://github.com/login/oauth/authorize?client_id=${clientid}&redirect_uri=${encodeURIComponent(redirectURL)}&scope=read:user`;
+    const githubURL = `https://github.com/login/oauth/authorize?client_id=${clientid}&redirect_uri=${encodeURIComponent(redirectURL)}&scope=read:user&state=${state}`;
 
     setTimeout(() => {
       // redirect to github login page
